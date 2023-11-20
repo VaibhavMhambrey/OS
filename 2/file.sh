@@ -1,0 +1,8 @@
+echo "copying contents of original file to dupe"
+string="hello i am vaibhav"
+file="original.txt"
+echo "$string">"$file"
+original="original.txt"
+dupe="dupe.txt"
+cp "$original" "$dupe"
+echo "Contents copied from $original to $dupe"
