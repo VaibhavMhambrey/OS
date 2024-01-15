@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
-
 using namespace std;
+
 int var=0;
 void accessPages(vector<int> &page, int page_number, int max_size, int &faults ,vector<int> &order) {
     auto it = find(page.begin(), page.end(), page_number);
@@ -65,4 +65,3 @@ int main() {
 
     return 0;
 }
-

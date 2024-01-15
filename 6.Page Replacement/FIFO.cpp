@@ -1,8 +1,5 @@
-#include <iostream>
-#include <vector>
-#include <algorithm>
+#include <bits/stdc++.h>
 #include <iomanip> // For formatting output
-
 using namespace std;
 
 void accessPages(vector<int> &page, int page_number, int max_size, int &faults,vector<int> &order) {
@@ -65,4 +62,3 @@ int main() {
 
     return 0;
 }
-

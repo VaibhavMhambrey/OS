@@ -59,17 +59,6 @@ void sjf::print_tat(){
     cout<<"p"<<process<<" "<<turnaround_time<<endl;
 }
 
-// void calculate(int n,sjf process[]){
-//     process[0].waiting_time=0;
-//     process[0].turnaround_time = process[0].waiting_time + process[0].burst_time;
-//     for (int i = 1; i < n; i++)
-//     {
-//         process[i].waiting_time= process[i-1].waiting_time + process[i-1].burst_time;
-//         process[i].turnaround_time = process[i].waiting_time + process[i].burst_time;
-//     }
-    
-// }
-
 void calculate_tat(int n,sjf p[]){
     int completion_time= p[0].arrival_time;
     for (int i = 0; i < n; i++)
@@ -136,13 +125,6 @@ int main(){
         process[i].process = i+1;
         process[i].getdata(n);
     }
-
-    //sort the array based on the burst_time
-
-    // for (int i = 0; i < n; i++)
-    // {
-    //     cout<<process[i].process<<" "<<process[i].burst_time<<endl;
-    // }
     
     sort(n,process);
 
@@ -167,11 +149,4 @@ int main(){
 	calculate_avg(n,process,avg_wt,avg_tat);
     //dispaly gannt chart 
     gchart(n,process);
-
-
-
-   
-    
-
-
 }

@@ -1,14 +1,15 @@
-echo "Give number of items"
+echo "sum and avg of n numbers"
+echo "Enter the number of numbers: "
 read n
-add=0
-avg=0
-for (( i=1;i<=n;i++ ))
+i=0
+sum=0
+
+while [ $i -ne $n ]
 do
-echo "give no"
-read a
-add=$(($add + a ))
+read x
+sum=$(($sum+$x))
+i=$(($i+1))
 done
-avg=$(($add / $n))
-echo "sum = $add"
-echo ""
-echo "avg = $avg"
+
+echo "sum: $sum"
+echo "avg: $(($sum/$n))"

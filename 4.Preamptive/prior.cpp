@@ -127,7 +127,6 @@ int main()
     int n;
     cout<<"Enter the Number of Processes\n";
     cin>>n;
-
     cout<<"Enter the Arrival Time and Burst Time and Priority Of Each Process\n";
     vector<Process> p(n);
 

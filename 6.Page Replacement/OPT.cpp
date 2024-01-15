@@ -102,11 +102,6 @@ int main()
 		cin>>pg[i];
 	cout<<endl;
 	
-	
-	
 	optimalPage(pg, pages, fn);
 	return 0;
 }
-
-// This code is contributed by Karandeep Singh
-
