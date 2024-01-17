@@ -1,129 +1,100 @@
-#include <stdio.h>
-struct task
+#include <iostream>
+#include <queue>
+#include <algorithm>
+#include <vector>
+
+using namespace std;
+
+class Process
 {
-    int taskID;
-    int bur;
-    int arr;
-    int wait;
-    int turn;
-    int prio;
-    int ps;
-    int pe;
+public:
+    int pid;
+    int arrival_time;
+    int burst_time;
+    int priority;
+    int waiting_time;
+    int turn_around_time;
+    int visited = 0;
+    int queue = 0;
+
+    bool operator<(const Process &other) const
+    {
+        // Higher priority processes go first
+        return priority > other.priority;
+    }
 };
+
+bool compare(Process p1, Process p2)
+{
+    return p1.arrival_time < p2.arrival_time;
+}
+
+void take_input(vector<Process> &processes)
+{
+
+    for (int i = 0; i < processes.size(); i++)
+    {
+        cout << "Enter the arrival time, burst time and priority of process " << i + 1 << ": ";
+        cin >> processes[i].arrival_time >> processes[i].burst_time >> processes[i].priority;
+        processes[i].pid = i + 1;
+    }
+    sort(processes.begin(), processes.end(), compare);
+}
+
+void schedule(vector<Process> &p)
+{
+    int current_time = p[0].arrival_time;
+    vector<Process> np;
+    priority_queue<Process> ready_queue;
+
+    for (int i = 0; i < p.size(); i++)
+    {
+        if (p[i].arrival_time <= current_time && p[i].queue == 0)
+        {
+            ready_queue.push(p[i]);
+            p[i].queue = 1;
+        }
+        while (!ready_queue.empty())
+        {
+            Process current_process = ready_queue.top();
+            ready_queue.pop();
+            current_process.waiting_time = current_time - current_process.arrival_time;
+            current_process.turn_around_time = current_process.waiting_time + current_process.burst_time;
+            current_time += current_process.burst_time;
+            cout << current_time << endl;
+            np.push_back(current_process);
+        }
+        // move this out of the while loop
+        for (int j = 0; j < p.size(); j++)
+        {
+            if (p[j].arrival_time <= current_time && p[j].queue == 0)
+            {
+                ready_queue.push(p[j]);
+                p[j].queue = 1;
+            }
+            else
+            {
+                continue;
+            }
+        }
+    }
+    // print
+    cout << np.size() << endl;
+    for (int i = 0; i < np.size(); i++)
+    {
+        cout << "Process " << np[i].pid << ":\n";
+        cout << "Waiting time: " << np[i].waiting_time << endl;
+        cout << "Turn around time: " << np[i].turn_around_time << endl;
+    }
+}
+
 int main()
 {
-    int n, i, b, a, c, j, min, k;
-    float awt, att;
-    printf("\nEnter number of processes:");
-    scanf("%d", &n);
-    struct task processes[n];
-    struct task temp1, temp2;
-    for (i = 0; i < n; i++)
-    {
-        processes[i].taskID = i;
-        printf("\nEnter burst time:");
-        scanf("%d", &b);
-        processes[i].bur = b;
-        printf("\nEnter arrival time:");
-        scanf("%d", &a);
-        processes[i].arr = a;
-        printf("\nEnter priority:");
-        scanf("%d", &c);
-        processes[i].prio = c;
-    }
-    // sorting
-    for (i = 0; i < n; i++)
-    {
-        temp1 = processes[i];
-        temp2 = temp1;
-        min = i;
-        for (j = i + 1; j < n; j++)
-        {
-            if (processes[j].arr < temp1.arr)
-            {
-                temp1 = processes[j];
-                min = j;
-            }
-            else if (processes[j].arr == temp1.arr)
-            {
-                if (processes[j].prio < temp1.prio)
-                {
-                    temp1 = processes[j];
-                    min = j;
-                }
-            }
-        }
-        processes[i] = temp1;
-        processes[min] = temp2;
-    }
-    // sort 2
-    int curt = processes[0].arr;
-    for (i = 0; i < n; i++)
-    {
-        processes[i].pe = curt + processes[i].bur;
-        for (j = i + 1; j < n; j++)
-        {
-            temp1 = processes[j];
-            temp2 = temp1;
-            min = j;
-            for (k = j + 1; k < n; k++)
-            {
-                if ((processes[k].arr) <= (processes[i].pe))
-                {
-                    if ((processes[k].prio) < (temp1.prio))
-                    {
-                        temp1 = processes[k];
-                        min = k;
-                    }
-                }
-            }
-            processes[j] = temp1;
-            processes[min] = temp2;
-        }
-        curt = processes[i].pe;
-    }
-    int tt = processes[0].arr;
-    for (i = 0; i < n; i++)
-    {
-        processes[i].wait = tt - processes[i].arr;
-        tt += processes[i].bur;
-        processes[i].turn = processes[i].bur + processes[i].wait;
-    }
-    // display
-    printf("\nPID\tPrio\tBT\tAT\tWT\tTAT\n");
-    for (i = 0; i < n; i++)
-    {
-
-        printf("\n%d\t%d\t%d\t%d\t%d\t%d", processes[i].taskID, processes[i].prio, processes[i].bur, processes[i].arr, processes[i].wait, processes[i].turn);
-    }
-    for (i = 0; i < n; i++)
-    {
-        processes[i].ps = processes[i].arr + processes[i].wait;
-    }
-    // calculating averages
-    awt = att = 0;
-    for (i = 0; i < n; i++)
-    {
-        awt += processes[i].wait;
-        att += processes[i].turn;
-    }
-    awt /= n;
-    att /= n;
-    printf("\nAverage waiting time:%f\nAverage turnaround time:%f", awt, att);
-    // gant chart
-    i = 0;
-    printf("\nGannt Chart:\n");
-    for (j = 0; j < processes[n - 1].ps + processes[n - 1].bur; j++)
-    {
-        if (j == processes[i].ps)
-        {
-            printf("P%d(%d)", processes[i].taskID, processes[i].ps);
-            i += 1;
-        }
-        printf("--");
-        if (j == processes[n - 1].ps + processes[n - 1].bur - 1)
-        {
-            printf("(%d)", j + 1);
-        }
-    }
+    int n;
+    cout << "Enter the number of processes: ";
+    cin >> n;
+    vector<Process> processes(n);
+    take_input(processes);
+    schedule(processes);
+    return 0;
 }

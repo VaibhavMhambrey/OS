@@ -1,207 +1,216 @@
-#include<iostream>
-#include<iomanip>
-#include<stdlib.h>
-
+#include <bits/stdc++.h>
 using namespace std;
-int m, n, flag;
+#define N 30
 
-int allocation[10][10], maximum[10][10], need[10][10];
-int available[10];
-
-void safety()
+// Safety algo begins here
+bool isSafe(int available[], int n, int m, int allocation[][N], int need[][N], int safeSeq[])
 {
-	int safe[n], work[m];
-	bool finish[n];
-    for(int i=0;i<n;i++)
+    // Mark all processes as unfinished
+    bool fin[N];
+    for (int i = 0; i < n; i++)
+        fin[i] = false, safeSeq[i] = 0;
+    // Initializing work equal to available
+    int work[N];
+    for (int i = 0; i < m; i++)
+        work[i] = available[i];
+    // Find an index i such that the process is not finished and needs less than or equal to work
+    int count = 0;
+    while (count < n)
     {
-    	safe[i]=-1;
-    	finish[i]=false;
-	}
-	for(int i=0; i<m; i++)
-		work[i] = available[i];
-
-	int k=0, loop_flag;
-	do
-	{
-		loop_flag=0;
-		for(int i=0; i<n; i++)
-		{
-	   		flag=0;
-	   		for(int j=0; j<m; j++)
-	   		{
-	   			if(finish[i]==false && need[i][j]<=work[j])
-	   				continue;
-	   			else
-	   				flag=1;
-			}
-
-			if(flag==0)
-			{
-				finish[i] = true;
-				for(int j=0; j<m; j++)
-					work[j] = work[j] + allocation[i][j];
-
-	    		safe[k]=i;
-		   		k++;
-		   		loop_flag=1;
-			}
-		}
-		flag=0;
-		for(int i=0; i<n; i++)
-		{
-			if(finish[i]==false)
-				flag=1;
-		}
-		if(flag==0)
-			break;
-		if(loop_flag==0)
-			break;
-	}while(true);
-
-	if(flag==0)
-	{
-		cout<<endl<<"Safe Sequence:  ";
-		for(int j=0; j<n; j++){
-			if(j==n-1){
-				cout<<safe[j];
-			}
-			else{
-				cout<<safe[j]<<" ..... ";
-			}
-		}
-		    
-	}
-	else
-		cout<<endl<< "Safe sequence doesnt exists";
-	cout<<endl;
+        bool found = false;
+        for (int i = 0; i < n; i++)
+        {
+            if (!fin[i])
+            {
+                int j;
+                for (j = 0; j < m; j++)
+                {
+                    if (need[i][j] > work[j])
+                        break;
+                }
+                if (j == m)
+                {
+                    for (int k = 0; k < m; k++)
+                        work[k] += allocation[i][k];
+                    safeSeq[count++] = i;
+                    fin[i] = true;
+                    found = true;
+                }
+            }
+        }
+        // If no process is found, the system is not in a safe state
+        if (!found)
+        {
+            cout << "The system is not in a safe state\n";
+            return false;
+        }
+    }
+    // If all processes are finished, the system is in a safe state
+    cout << "The system is in a safe state\n";
+    return true;
 }
 
-void display()
+// resource request algo begins here
+// here i is the process number
+// request is the request vector
+bool resourceRequest(int i, int m, int n, int request[], int need[][N], int safeSeq[], int available[], int allocation[][N])
 {
-    cout<<endl<<"Allocation \t Maximum \t Need \t Available"<<endl;
-    for(int i=0;i<n;i++)
+    // request vector has a size m
+    // reqi[j]=k means process i wants k instances of resource j
+    bool tempSafe = true; // Initialize a flag for temporary safety
+
+    for (int j = 0; j < m; j++)
     {
-    	cout<<setiosflags(ios::right)<<" ";
-		for(int j=0;j<m;j++)
-			cout<<allocation[i][j]<<" ";
+        // if request is greater than need, return false
+        if (request[j] > need[i][j])
+        {
+            tempSafe = false;
+            break;
+        }
 
-		cout<<setw(11);
-		for(int j=0;j<m;j++)
-			cout<<maximum[i][j]<<" ";
-
-		cout<<setw(8);
-		for(int j=0;j<m;j++)
-			cout<<need[i][j]<<" ";
-			
-		if(i==0)
-		{
-			cout<<setw(6);
-			for(int j=0;j<m;j++)
-			{
-				cout<<available[j]<<" ";
-			}
-		}
-		
-		cout<<endl;
+        // if request is greater than available, return false
+        if (request[j] > available[j])
+        {
+            tempSafe = false;
+            break;
+        }
     }
+
+    if (tempSafe)
+    {
+        // pretend to allocate the resources
+        for (int j = 0; j < m; j++)
+        {
+            available[j] -= request[j];
+            allocation[i][j] += request[j];
+            need[i][j] -= request[j];
+        }
+
+        // check if the temp state is safe
+        tempSafe = isSafe(available, n, m, allocation, need, safeSeq);
+
+        // revert back to original state if not safe
+        if (!tempSafe)
+        {
+            for (int x = 0; x < m; x++)
+            {
+                available[x] += request[x];
+                allocation[i][x] -= request[x];
+                need[i][x] += request[x];
+            }
+        }
+    }
+
+    return tempSafe;
 }
 
-int main()
+// Utility Functions
+void printMat(int x, int y, int mat[][N])
 {
-	//-----------------------Input----------------------------------------
-    cout<<"Enter the number of Processes: ";
-    cin>>n;
-
-    cout<<"Enter the number of Resource types: ";
-    cin>>m;
-
-    cout<<"Enter Allocated Resources for each process:"<<endl;
-    for(int i=0;i<n;i++)
+    for (int i = 0; i < x; i++)
     {
-    	cout<<"P"<<i<<": ";
-		for(int j=0;j<m;j++)
-    		cin>>allocation[i][j];
+        for (int j = 0; j < y; j++)
+            cout << mat[i][j] << " ";
+        cout << endl;
+    }
+    cout << endl;
+}
+
+void printDetails(int n, int m, int allocation[][N], int maxm[][N], int need[][N], int available[])
+{
+    cout << "Allocation\n";
+    printMat(n, m, allocation);
+
+    cout << "Max\n";
+    printMat(n, m, maxm);
+
+    cout << "Need\n";
+    printMat(n, m, need);
+
+    cout << "Available\n";
+    for (int i = 0; i < m; i++)
+        cout << available[i] << " ";
+
+    cout << endl;
+}
+
+// print safe sequence
+void printSafeSeq(int safeSeq[], int n)
+{
+    for (int i = 0; i < n; i++)
+        cout << safeSeq[i] << (i == n - 1 ? "\n" : " -> ");
+    cout << endl;
+}
+
+int main(int argc, char const *argv[])
+{
+    int need[N][N], safeSeq[N];
+    // Static Test Case
+    // int n = 5, m = 3;
+    // int available[] = {3, 3, 2};
+    // int maxm[][N] = {{7, 5, 3}, {3, 2, 2}, {9, 0, 2}, {2, 2, 2}, {4, 3, 3}};
+    // int allocation[][N] = {{0, 1, 0}, {2, 0, 0}, {3, 0, 2}, {2, 1, 1}, {0, 0, 2}};
+
+    int m, n, available[N], maxm[N][N], allocation[N][N];
+    cout << "Enter the number of processes: ", cin >> n;
+    cout << "Enter the number of resources: ", cin >> m;
+    cout << "How many instances of each resource are available?\n";
+    for (int i = 0; i < m; i++)
+        cout << "R" << i << ": ", cin >> available[i];
+
+    cout << "Enter the maximum resources required for each process\n";
+    for (int i = 0; i < n; i++)
+    {
+        cout << "P" << i << ": ";
+        for (int j = 0; j < m; j++)
+            cin >> maxm[i][j];
     }
 
-    cout<<endl<<"Enter maximum Resources for each process:"<<endl;
-    for(int i=0;i<n;i++)
+    cout<<"Enter the number of resources allocated to each process\n";
+    for (int i = 0; i < n; i++)
     {
-    	cout<<"P"<<i<<": ";
-		for(int j=0;j<m;j++)
-	        cin>>maximum[i][j];
+        cout << "P" << i << ": ";
+        for (int j = 0; j < m; j++)
+            cin >> allocation[i][j];
     }
 
-    cout<<endl<<"Enter Available Resources:"<<endl;
-    for(int i=0;i<m;i++)
-    	cin>>available[i];
-	//------------------------------------------------------
 
-    for(int i=0;i<n;i++)
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            need[i][j] = maxm[i][j] - allocation[i][j];
+
+    printDetails(n, m, allocation, maxm, need, available);
+
+    if (isSafe(available, n, m, allocation, need, safeSeq))
     {
-		for(int j=0;j<m;j++)
-    		need[i][j] = maximum[i][j] - allocation[i][j];
+        cout << "The safe sequence is: ";
+        printSafeSeq(safeSeq, n);
     }
 
-	display();
-	
-	safety();
+    int choice, requesting_process, request[N];
+    while (1)
+    {
+        cout << "Enter choice\n1. Enter request for a new process\n2. Exit\n", cin >> choice;
+        switch (choice)
+        {
+        case 1:
+            cout << "Which Process?\n", cin >> requesting_process;
+            for (int i = 0; i < m; i++)
+                cout << "R" << i << ": ", cin >> request[i];
+            if (resourceRequest(requesting_process, m, n, request, need, safeSeq, available, allocation))
+                cout << "The request has been granted successfully Leaving the system in a Safe State\nSafe Sequence: ", printSafeSeq(safeSeq, n), printDetails(n, m, allocation, maxm, need, available);
+            else
+                cout << "The request cannot be granted. The Process needs to wait for the resources to free up!\n";
+            break;
 
-	char ans='y';
+        case 2:
+            exit(EXIT_SUCCESS);
 
-	do{	
-		int request[m], p;
-		cout<<endl<<"Enter Process Number: ";
-		cin>>p;
-	
-		cout<<"Enter Request: ";
-		for(int i=0; i<m; i++)
-			cin>>request[i];
-			
-		for(int i=0; i<m; i++)
-		{
-			if(need[p][i]<request[i])
-			{
-				cout<<endl<<"Process exceeded maximum claim for resorces.\nRequest Cannot be granted."<<endl;
-				goto end;
-			}
-			if(available[i]<request[i])
-			{
-				cout<<endl<<"Process must wait.Resorces not available."<<endl;
-				goto end;
-			}
-		}
-	
-	    for(int i=0; i<m; i++)
-	    {
-	    	available[i] -= request[i];
-	    	allocation[p][i] += request[i];
-	    	need[p][i] -= request[i];
-		}
-	
-		cout<<endl<<endl;
-		display();
+        default:
+            cout << "Invalid choice\n";
+            break;
+        }
+    }
 
-		safety();
-	
-		if(flag==1)
-		{
-			cout<<"Request cannot be granted."<<endl;
-			for(int i=0; i<m; i++)
-			{
-				available[i] += request[i];
-		    	allocation[p][i] -= request[i];
-		    	need[p][i] += request[i];
-			}
-			cout<<endl<<"States Reverted:"<<endl;
-			display();
-		}
-		else
-		{
-			cout<<endl<<"Safe Sequence Exists and request can be granted immediately to process.\nSnapshot after request:"<<endl;
-			display();
-		}
-		end:
-		cout<<endl<<"Try another Process?(Y/N)  ";
-		cin>>ans;
-	}while(ans=='y' || ans=='Y');
+    return 0;
 }
